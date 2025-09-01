@@ -7,12 +7,6 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "KJ Eruv Map",
   description: "Eruv boundaries and information for Kiryas Joel and surrounding areas.",
-  icons: [
-    {
-      rel: "icon",
-      url: "/fence.svg",
-    },
-  ],
 };
 
 export default function RootLayout({
@@ -22,9 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <div className="h-screen w-screen">{children}</div>
-      </body>
+      <body className={inter.className}>{children}</body>
     </html>
   );
 }
