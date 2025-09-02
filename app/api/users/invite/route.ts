@@ -51,41 +51,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 });
     }
 
-    // Check if user already exists
     const userExists = await adminDb.collection('users').where('email', '==', email).get().then(snap => !snap.empty);
     if (userExists) {
       return NextResponse.json({ error: 'A user with this email already exists.' }, { status: 409 });
     }
 
-    // 1. Create the user in Firebase Auth
     const userRecord = await auth().createUser({ email });
 
-    // 2. Create the user document in Firestore
     await adminDb.collection('users').doc(userRecord.uid).set({
       email: userRecord.email,
       role: 'editor',
-      status: 'pending', // User is pending until they set a password
+      status: 'pending',
       createdAt: firestore.FieldValue.serverTimestamp(),
     });
 
-    // 3. Generate the password reset link (which acts as a "set password" link)
-    const actionLink = await auth().generatePasswordResetLink(email);
+    // --- THIS LOGIC WAS UPDATED ---
+    // We now create a password reset link that redirects to our custom page.
+    const actionCodeSettings = {
+      url: `${process.env.NEXT_PUBLIC_BASE_URL}/set-password`,
+      handleCodeInApp: true,
+    };
+    const actionLink = await auth().generatePasswordResetLink(email, actionCodeSettings);
+    // --- END OF CHANGE ---
 
-    // 4. Send the welcome email with the link
     await sendWelcomeEmail(email, actionLink);
 
     return NextResponse.json({ success: true, message: `An invitation email has been sent to ${email}.` }, { status: 201 });
 
   } catch (error: unknown) {
     console.error("Invite user error:", error);
-    // Type guard for Firebase-specific errors
-   if (typeof error === 'object'
-      && error !== null
-      && 'code' in error
-      && (error as {code: unknown}).code === 'auth/email-already-exists') {
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as {code: unknown}).code === 'auth/email-already-exists') {
         return NextResponse.json({ error: 'A user with this email already exists in Firebase Authentication.' }, { status: 409 });
     }
-    // General error message for other cases
     return NextResponse.json({ error: 'An internal server error occurred while sending the invitation.' }, { status: 500 });
   }
 }

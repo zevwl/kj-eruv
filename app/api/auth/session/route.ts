@@ -1,8 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { auth } from 'firebase-admin';
+import { auth, firestore } from 'firebase-admin';
 import { initAdmin, adminDb } from '../../../../firebase/admin';
 
-// Explicitly setting the runtime for API routes that use Node.js-specific libraries.
 export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
@@ -24,6 +23,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not authorized' }, { status: 403 });
     }
 
+    const userDocId = userQuery.docs[0].id;
+    await adminDb.collection('users').doc(userDocId).update({
+      lastLogin: firestore.FieldValue.serverTimestamp(),
+    });
+
     const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
     const sessionCookie = await auth().createSessionCookie(idToken, { expiresIn });
     const options = {
@@ -31,8 +35,6 @@ export async function POST(request: NextRequest) {
       value: sessionCookie,
       maxAge: expiresIn,
       httpOnly: true,
-      // Set the secure flag to true only in production, allowing the cookie
-      // to be set over HTTP during local development.
       secure: process.env.NODE_ENV === 'production',
     };
 
