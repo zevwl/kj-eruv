@@ -22,11 +22,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Logic for page routes remains the same.
-  const isProtected = pathname.startsWith('/editor') || pathname.startsWith('/users');
+  const isProtectedRoute = pathname.startsWith('/editor') || pathname.startsWith('/users');
+  const isAdminRoute = pathname.startsWith('/users');
 
   if (!sessionCookie) {
-    if (isProtected) {
+    if (isProtectedRoute) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
     return NextResponse.next();
@@ -42,9 +42,15 @@ export async function middleware(request: NextRequest) {
     const userQuery = await usersRef.where('email', '==', decodedToken.email).limit(1).get();
 
     if (userQuery.empty) {
-      if (isProtected) {
+      if (isProtectedRoute) {
         return NextResponse.redirect(new URL('/not-authorized', request.url));
       }
+    }
+
+    const userDoc = userQuery.docs[0].data();
+    const isAdminUser = userDoc.role === 'admin';
+    if (isAdminRoute && !isAdminUser) {
+        return NextResponse.redirect(new URL('/not-authorized', request.url));
     }
 
     if (pathname === '/login') {
