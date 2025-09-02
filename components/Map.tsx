@@ -3,8 +3,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Loader } from '@googlemaps/js-api-loader';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import { collection, query, onSnapshot, GeoPoint, Timestamp } from 'firebase/firestore';
-import { db } from '../firebase/client';
+import { getAuth, onAuthStateChanged, User as AuthUser } from 'firebase/auth';
+import { db, app } from '../firebase/client';
 import type {
   DocumentData,
   FirestoreDataConverter,
@@ -58,11 +60,20 @@ export default function Map({ apiKey }: MapProps) {
 
   const [google, setGoogle] = useState<typeof window.google | null>(null);
   const [searchResult, setSearchResult] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mapLibraries, setMapLibraries] = useState<{
     maps: google.maps.MapsLibrary | null,
     marker: google.maps.MarkerLibrary | null,
     geometry: google.maps.GeometryLibrary | null
   }>({ maps: null, marker: null, geometry: null });
+
+  useEffect(() => {
+    const auth = getAuth(app);
+    const unsubscribe = onAuthStateChanged(auth, (user: AuthUser | null) => {
+      setIsLoggedIn(!!user);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const loader = new Loader({
@@ -191,6 +202,13 @@ export default function Map({ apiKey }: MapProps) {
           )}
         </div>
       </div>
+      {isLoggedIn && (
+        <Link href="/editor">
+          <span className="fixed bottom-4 right-4 z-20 px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-lg hover:bg-indigo-700 transition-colors cursor-pointer">
+            Go to Editor
+          </span>
+        </Link>
+      )}
     </div>
   );
 }

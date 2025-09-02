@@ -2,10 +2,11 @@
 
 import React from 'react';
 import NavLink from '@/components/NavLink';
-import useAdminStatus from '@/hooks/useAdminStatus'; // Assuming this hook exists for checking admin role
+import useAdminStatus from '@/hooks/useAdminStatus';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
-export default function EditorLayout({
+export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -14,11 +15,9 @@ export default function EditorLayout({
   const { isAdmin, isLoading } = useAdminStatus();
 
   const handleLogout = async () => {
-    // Call the logout API route
     await fetch('/api/auth/logout', { method: 'POST' });
-    // Redirect to login page
     router.push('/login');
-    router.refresh(); // Ensure server-side state is cleared
+    router.refresh();
   };
 
   return (
@@ -34,12 +33,14 @@ export default function EditorLayout({
                         <NavLink href="/editor">
                             Manage Eruv List
                         </NavLink>
-                        {/* Conditionally render the User Management link if user is an admin */}
                         {!isLoading && isAdmin && (
                             <NavLink href="/users">
                                 Manage Users
                             </NavLink>
                         )}
+                        <Link href="/" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-700 hover:text-white">
+                            View Public Map
+                        </Link>
                     </div>
                 </div>
                 <div className="flex items-center">
