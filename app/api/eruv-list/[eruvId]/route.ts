@@ -27,7 +27,7 @@ async function verifyEditor(request: NextRequest): Promise<boolean> {
 }
 
 // Handler for UPDATING an eruv
-export async function PUT(request: NextRequest, { params }: { params: { eruvId: string } }) {
+export async function PUT(request: NextRequest, context: { params: Promise<{ eruvId: string }> }) {
   await initAdmin();
   const isAuthorized = await verifyEditor(request);
   if (!isAuthorized) {
@@ -35,7 +35,7 @@ export async function PUT(request: NextRequest, { params }: { params: { eruvId: 
   }
 
   try {
-    const { eruvId } = params;
+    const { eruvId } = await context.params; // Await the promise to get the params
     const body = await request.json();
     const { name, inspector, certExpiration, boundary } = body;
 
@@ -45,9 +45,9 @@ export async function PUT(request: NextRequest, { params }: { params: { eruvId: 
 
     const updatedEruvData: UpdatedEruvDataType = {
       name,
-      inspector: inspector || '', // Save empty string if inspector is cleared
+      inspector: inspector || '',
       boundary: boundary.map((p: { lat: number, lng: number }) => new firestore.GeoPoint(p.lat, p.lng)),
-      certExpiration: certExpiration ? firestore.Timestamp.fromDate(new Date(certExpiration)) : null, // Save null if date is cleared
+      certExpiration: certExpiration ? firestore.Timestamp.fromDate(new Date(certExpiration)) : null,
     };
 
     await adminDb.collection('eruvs').doc(eruvId).update(updatedEruvData);
@@ -60,7 +60,7 @@ export async function PUT(request: NextRequest, { params }: { params: { eruvId: 
 }
 
 // Handler for DELETING an eruv
-export async function DELETE(request: NextRequest, { params }: { params: { eruvId: string } }) {
+export async function DELETE(request: NextRequest, context: { params: Promise<{ eruvId: string }> }) {
   await initAdmin();
   const isAuthorized = await verifyEditor(request);
   if (!isAuthorized) {
@@ -68,7 +68,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { eruvI
   }
 
   try {
-    const { eruvId } = params;
+    const { eruvId } = await context.params; // Await the promise to get the params
     await adminDb.collection('eruvs').doc(eruvId).delete();
     return NextResponse.json({ success: true, message: 'Eruv deleted successfully.' });
   } catch (error) {
@@ -76,4 +76,3 @@ export async function DELETE(request: NextRequest, { params }: { params: { eruvI
     return NextResponse.json({ error: 'Failed to delete eruv. Please try again.' }, { status: 500 });
   }
 }
-

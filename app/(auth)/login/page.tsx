@@ -7,7 +7,7 @@ import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail
 } from 'firebase/auth';
-import { app } from '../../../firebase/client'; // Your Firebase client app instance
+import { app } from '../../../firebase/client';
 
 export default function LoginPage() {
   const auth = getAuth(app);
@@ -24,36 +24,41 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      // 1. Sign in with Firebase client SDK
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
-      // 2. Get the ID token from the signed-in user
       const idToken = await user.getIdToken();
-
-      // 3. Send the token to our session API route
       const response = await fetch('/api/auth/session', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken }),
       });
 
       if (response.ok) {
-        // 4. If session is created successfully, redirect to the editor
         router.push('/editor');
       } else {
         const data = await response.json();
         setError(data.error || 'Failed to create session.');
       }
     } catch (err: unknown) {
-      // Handle Firebase authentication errors
-      if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        setError('Incorrect email or password. Please try again.');
-      } else if (err.code === 'auth/user-not-found') {
-        setError('No account found with this email.');
+      if (typeof err === 'object'
+        && err !== null
+        && 'code' in err) {
+        const firebaseError = err as { code: string };
+        switch (firebaseError.code) {
+          case 'auth/wrong-password':
+          case 'auth/invalid-credential':
+            setError('Incorrect email or password. Please try again.');
+            break;
+          case 'auth/user-not-found':
+            setError('No account found with this email.');
+            break;
+          default:
+            setError('An unexpected authentication error occurred.');
+            console.error(err);
+            break;
+        }
       } else {
+        // Handle non-Firebase errors (e.g., network issues)
         setError('An unexpected error occurred. Please try again.');
         console.error(err);
       }

@@ -20,7 +20,7 @@ async function verifyAdmin(request: NextRequest): Promise<boolean> {
 }
 
 // --- Handler for UPDATING a user ---
-export async function PUT(request: NextRequest, { params }: { params: { uid: string } }) {
+export async function PUT(request: NextRequest, context: { params: Promise<{ uid: string }> }) {
   await initAdmin();
   const isAdmin = await verifyAdmin(request);
   if (!isAdmin) {
@@ -28,7 +28,7 @@ export async function PUT(request: NextRequest, { params }: { params: { uid: str
   }
 
   try {
-    const { uid } = params;
+    const { uid } = await context.params; // Await the promise to get the params
     const { role, status } = await request.json();
 
     if (!role || !status) {
@@ -40,13 +40,12 @@ export async function PUT(request: NextRequest, { params }: { params: { uid: str
     return NextResponse.json({ success: true, message: 'User updated successfully.' });
   } catch (error) {
     console.error("Update user error:", error);
-    // Provide a more descriptive, yet still safe, error message.
     return NextResponse.json({ error: 'Failed to update user. Please try again.' }, { status: 500 });
   }
 }
 
 // --- Handler for DELETING a user ---
-export async function DELETE(request: NextRequest, { params }: { params: { uid: string } }) {
+export async function DELETE(request: NextRequest, context: { params: Promise<{ uid: string }> }) {
   await initAdmin();
   const isAdmin = await verifyAdmin(request);
   if (!isAdmin) {
@@ -54,7 +53,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { uid: 
   }
 
   try {
-    const { uid } = params;
+    const { uid } = await context.params; // Await the promise to get the params
 
     // Critical: Delete from Auth first, then from Firestore.
     await auth().deleteUser(uid);
@@ -63,7 +62,6 @@ export async function DELETE(request: NextRequest, { params }: { params: { uid: 
     return NextResponse.json({ success: true, message: 'User deleted successfully.' });
   } catch (error) {
     console.error("Delete user error:", error);
-    // Provide a more descriptive, yet still safe, error message.
     return NextResponse.json({ error: 'Failed to delete user. Please try again.' }, { status: 500 });
   }
 }
