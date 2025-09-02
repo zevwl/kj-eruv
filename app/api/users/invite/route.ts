@@ -87,6 +87,5 @@ export async function POST(request: NextRequest) {
     }
     // General error message for other cases
     return NextResponse.json({ error: 'An internal server error occurred while sending the invitation.' }, { status: 500 });
-    // --- END OF CHANGE ---
   }
 }
