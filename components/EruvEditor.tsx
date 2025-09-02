@@ -46,6 +46,24 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
         zoom: eruvToEdit ? 15 : 14,
       });
 
+              const imageUrl = '/eruv-map.jpg'; // Place your image in the /public folder
+
+              const imageBounds = {
+                north: 41.41187283359051,  // Top edge latitude
+                south: 41.27217820408219,  // Bottom edge latitude
+                east: -74.10016518861615,  // Right edge longitude
+                west: -74.23687780196233,   // Left edge longitude
+              };
+
+              // Create the overlay object
+              const mapOverlay = new google.maps.GroundOverlay(imageUrl, imageBounds);
+
+              // You can also adjust the opacity
+              mapOverlay.setOpacity(0.7);
+
+              // Add the overlay to your map
+              mapOverlay.setMap(map);
+
       // If we are editing, draw the existing polygon.
       if (eruvToEdit) {
         const existingPolygon = new Polygon({
