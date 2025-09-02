@@ -65,14 +65,11 @@ export async function POST(request: NextRequest) {
       createdAt: firestore.FieldValue.serverTimestamp(),
     });
 
-    // --- THIS LOGIC WAS UPDATED ---
-    // We now create a password reset link that redirects to our custom page.
     const actionCodeSettings = {
       url: `${process.env.NEXT_PUBLIC_BASE_URL}/set-password`,
       handleCodeInApp: true,
     };
     const actionLink = await auth().generatePasswordResetLink(email, actionCodeSettings);
-    // --- END OF CHANGE ---
 
     await sendWelcomeEmail(email, actionLink);
 
