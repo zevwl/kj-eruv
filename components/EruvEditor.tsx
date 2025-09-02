@@ -85,7 +85,7 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
           drawingManager.setDrawingMode(null);
         });
       }
-    }).catch(e => {
+    }).catch(() => {
       setError("Failed to load map. Please refresh the page.");
     });
   }, [eruvToEdit]);
