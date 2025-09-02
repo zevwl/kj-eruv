@@ -1,5 +1,5 @@
 <svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <g stroke="#BFDBFE" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
+  <g stroke="#4C51BF" stroke-width="16" stroke-linecap="round" stroke-linejoin="round">
     <path d="M38 64V192" /> <!-- Left most post -->
     <path d="M83 44V192" /> <!-- 2 post -->
     <path d="M128 24V192" /> <!-- 3 post -->

@@ -8,10 +8,18 @@ export const metadata: Metadata = {
   title: "KJ Eruv Map",
   description: "Eruv boundaries and information for Kiryas Joel and surrounding areas.",
   icons: [
+    // Icon for Light Mode
     {
-      rel: "icon",
-      url: "/fence.svg",
+      rel: 'icon',
+      url: '/fence-light.svg',
+      media: '(prefers-color-scheme: light)'
     },
+    // Icon for Dark Mode
+    {
+      rel: 'icon',
+      url: '/fence.svg',
+      media: '(prefers-color-scheme: dark)'
+    }
   ],
 };
 
