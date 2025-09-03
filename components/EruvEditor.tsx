@@ -10,6 +10,9 @@ type EruvData = {
   inspector: string;
   certExpiration: string;
   boundary: { lat: number, lng: number }[];
+  strokeColor: string;
+  fillColor: string;
+  fillOpacity: number;
 };
 
 type EruvEditorProps = {
@@ -20,11 +23,15 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
   const router = useRouter();
   const mapRef = useRef<HTMLDivElement>(null);
   const shapeRef = useRef<google.maps.Polygon | null>(null);
+  const drawingManagerRef = useRef<google.maps.drawing.DrawingManager | null>(null);
 
   const [formState, setFormState] = useState({
     name: eruvToEdit?.name || '',
     inspector: eruvToEdit?.inspector || '',
     certExpiration: eruvToEdit?.certExpiration || '',
+    strokeColor: eruvToEdit?.strokeColor || '#990000',
+    fillColor: eruvToEdit?.fillColor || '#bce2ab',
+    fillOpacity: eruvToEdit?.fillOpacity || 0.35,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +59,7 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
                 north: 41.41187283359051,  // Top edge latitude
                 south: 41.27217820408219,  // Bottom edge latitude
                 east: -74.10016518861615,  // Right edge longitude
-                west: -74.23687780196233,   // Left edge longitude
+                west: -74.23687780196233,  // Left edge longitude
               };
 
               // Create the overlay object
@@ -83,17 +90,22 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
           drawingControl: true,
           drawingControlOptions: {
             position: google.maps.ControlPosition.TOP_CENTER,
-            drawingModes: [google.maps.drawing.OverlayType.POLYGON],
+            drawingModes: [
+              google.maps.drawing.OverlayType.POLYGON,
+              // google.maps.drawing.OverlayType.MARKER,
+            ],
           },
           polygonOptions: {
-            fillColor: '#FF0000',
-            fillOpacity: 0.35,
+            fillColor: formState.fillColor,
+            strokeColor: formState.strokeColor,
+            fillOpacity: formState.fillOpacity,
             strokeWeight: 2,
             editable: true,
             zIndex: 1
           },
         });
         drawingManager.setMap(map);
+        drawingManagerRef.current = drawingManager;
 
         google.maps.event.addListener(drawingManager, 'polygoncomplete', (polygon: google.maps.Polygon) => {
           if (shapeRef.current) {
@@ -108,9 +120,27 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
     });
   }, [eruvToEdit]);
 
+  // This useEffect hook listens for color changes and updates the map in real-time.
+  useEffect(() => {
+    const newOptions = {
+      strokeColor: formState.strokeColor,
+      fillColor: formState.fillColor,
+      fillOpacity: formState.fillOpacity,
+    };
+
+    if (shapeRef.current) {
+      shapeRef.current.setOptions(newOptions);
+    }
+
+    if (drawingManagerRef.current) {
+      drawingManagerRef.current.setOptions({ polygonOptions: newOptions });
+    }
+  }, [formState.strokeColor, formState.fillColor, formState.fillOpacity]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormState(prevState => ({ ...prevState, [name]: value }));
+    const newValue = name === 'fillOpacity' ? parseFloat(value) : value;
+    setFormState(prevState => ({ ...prevState, [name]: newValue }));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -177,6 +207,22 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
           <label htmlFor="certExpiration" className="block text-sm font-medium text-gray-700">Certification Expiration Date</label>
           <input type="date" name="certExpiration" id="certExpiration" value={formState.certExpiration} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" />
         </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label htmlFor="strokeColor" className="block text-sm font-medium text-gray-700">Border Color</label>
+                <input type="color" name="strokeColor" id="strokeColor" value={formState.strokeColor} onChange={handleInputChange} className="mt-1 h-10 w-full block border border-gray-300 rounded-md" />
+            </div>
+            <div>
+                <label htmlFor="fillColor" className="block text-sm font-medium text-gray-700">Fill Color</label>
+                <input type="color" name="fillColor" id="fillColor" value={formState.fillColor} onChange={handleInputChange} className="mt-1 h-10 w-full block border border-gray-300 rounded-md" />
+            </div>
+            <div>
+                <label htmlFor="fillOpacity" className="block text-sm font-medium text-gray-700">Fill Opacity</label>
+                <input type="range" name="fillOpacity" id="fillOpacity" min="0" max="1" step="0.01" value={formState.fillOpacity} onChange={handleInputChange} className="mt-1 w-full" />
+            </div>
+        </div>
+
         <div className="flex justify-end space-x-4">
             <button type="button" onClick={() => router.push('/editor')} className="px-6 py-2 font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">
                 Cancel
