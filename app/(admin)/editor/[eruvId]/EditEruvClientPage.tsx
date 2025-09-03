@@ -14,6 +14,9 @@ type Eruv = {
   inspector: string;
   certExpiration?: Timestamp | null;
   boundary: GeoPoint[];
+  strokeColor: string;
+  fillColor: string;
+  fillOpacity: number;
 };
 
 const eruvConverter: FirestoreDataConverter<Eruv> = {
@@ -29,6 +32,9 @@ const eruvConverter: FirestoreDataConverter<Eruv> = {
       inspector: data.inspector,
       certExpiration: data.certExpiration,
       boundary: data.boundary,
+      strokeColor: data.strokeColor,
+      fillColor: data.fillColor,
+      fillOpacity: data.fillOpacity,
     };
   },
 };

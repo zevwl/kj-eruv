@@ -46,37 +46,30 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
     loader.load().then(async (google) => {
       const { Map } = await google.maps.importLibrary("maps") as google.maps.MapsLibrary;
       const { DrawingManager } = await google.maps.importLibrary("drawing") as google.maps.DrawingLibrary;
-      const { Polygon } = google.maps; // Correctly get Polygon from top-level namespace
+      const { Polygon } = google.maps;
 
       const map = new Map(mapRef.current as HTMLDivElement, {
         center: eruvToEdit?.boundary[0] || { lat: 41.320, lng: -74.175 },
         zoom: eruvToEdit ? 15 : 14,
       });
 
-              const imageUrl = '/eruv-map.jpg'; // Place your image in the /public folder
-
-              const imageBounds = {
-                north: 41.41187283359051,  // Top edge latitude
-                south: 41.27217820408219,  // Bottom edge latitude
-                east: -74.10016518861615,  // Right edge longitude
-                west: -74.23687780196233,  // Left edge longitude
-              };
-
-              // Create the overlay object
-              const mapOverlay = new google.maps.GroundOverlay(imageUrl, imageBounds);
-
-              // You can also adjust the opacity
-              mapOverlay.setOpacity(0.7);
-
-              // Add the overlay to your map
-              mapOverlay.setMap(map);
+      const imageUrl = '/eruv-map.jpg';
+      const imageBounds = {
+        north: 41.41187283359051,
+        south: 41.27217820408219,
+        east: -74.10016518861615,
+        west: -74.23687780196233,
+      };
+      const mapOverlay = new google.maps.GroundOverlay(imageUrl, imageBounds, { opacity: 0.7 });
+      mapOverlay.setMap(map);
 
       // If we are editing, draw the existing polygon.
       if (eruvToEdit) {
         const existingPolygon = new Polygon({
           paths: eruvToEdit.boundary,
-          fillColor: '#FF0000',
-          fillOpacity: 0.35,
+          fillColor: formState.fillColor,
+          strokeColor: formState.strokeColor,
+          fillOpacity: formState.fillOpacity,
           strokeWeight: 2,
           editable: true,
           zIndex: 1,
@@ -92,7 +85,6 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
             position: google.maps.ControlPosition.TOP_CENTER,
             drawingModes: [
               google.maps.drawing.OverlayType.POLYGON,
-              // google.maps.drawing.OverlayType.MARKER,
             ],
           },
           polygonOptions: {
@@ -115,7 +107,8 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
           drawingManager.setDrawingMode(null);
         });
       }
-    }).catch(() => {
+    }).catch((e) => {
+      console.error("Failed to load map:", e);
       setError("Failed to load map. Please refresh the page.");
     });
   }, [eruvToEdit]);
@@ -162,7 +155,6 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
 
     setIsLoading(true);
 
-    // Determine if we are creating or updating
     const isEditing = !!eruvToEdit;
     const url = isEditing ? `/api/eruv-list/${eruvToEdit.id}` : '/api/eruv-list';
     const method = isEditing ? 'PUT' : 'POST';
@@ -235,4 +227,3 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
     </div>
   );
 }
-
