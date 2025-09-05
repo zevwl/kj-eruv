@@ -38,6 +38,15 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isOverlayVisible, setIsOverlayVisible] = useState(true);
+  const [overlayOpacity, setOverlayOpacity] = useState(0.7);
+  const [imageBounds, setImageBounds] = useState({
+    north: 41.411872,
+    south: 41.272178,
+    east: -74.100165,
+    west: -74.236877,
+  });
+  const [googleMaps, setGoogleMaps] = useState<typeof google | null>(null);
+  const [positionStep, setPositionStep] = useState(0.00001);
 
   useEffect(() => {
     const loader = new Loader({
@@ -47,6 +56,7 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
     });
 
     loader.load().then(async (google) => {
+      setGoogleMaps(google); // Save the google object to state
       const { Map } = await google.maps.importLibrary("maps") as google.maps.MapsLibrary;
       const { DrawingManager } = await google.maps.importLibrary("drawing") as google.maps.DrawingLibrary;
       const { Polygon } = google.maps;
@@ -58,13 +68,7 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
       mapInstanceRef.current = map;
 
       const imageUrl = '/eruv-map.jpg';
-      const imageBounds = {
-        north: 41.41187283359051,
-        south: 41.27217820408219,
-        east: -74.10016518861615,
-        west: -74.23687780196233,
-      };
-      const mapOverlay = new google.maps.GroundOverlay(imageUrl, imageBounds, { opacity: 0.7 });
+      const mapOverlay = new google.maps.GroundOverlay(imageUrl, imageBounds, { opacity: overlayOpacity });
       mapOverlay.setMap(map);
       mapOverlayRef.current = mapOverlay;
 
@@ -141,10 +145,45 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
     }
   }, [isOverlayVisible]);
 
+  useEffect(() => {
+    if (mapOverlayRef.current) {
+      mapOverlayRef.current.setOpacity(overlayOpacity);
+    }
+  }, [overlayOpacity]);
+
+   useEffect(() => {
+    if (mapOverlayRef.current && googleMaps && mapInstanceRef.current) {
+      // 1. Remove the old overlay from the map
+      mapOverlayRef.current.setMap(null);
+
+      // 2. Create a new overlay with the updated bounds
+      const newOverlay = new googleMaps.maps.GroundOverlay(
+        '/eruv-map.jpg',
+        imageBounds,
+        { opacity: overlayOpacity, map: mapInstanceRef.current }
+      );
+
+      // 3. Update the ref to point to the new overlay object
+      mapOverlayRef.current = newOverlay;
+    }
+  }, [imageBounds, googleMaps, overlayOpacity]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const newValue = name === 'fillOpacity' ? parseFloat(value) : value;
     setFormState(prevState => ({ ...prevState, [name]: newValue }));
+  };
+
+  const handleBoundsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setImageBounds(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
+  };
+
+  const handleStepChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newStep = parseFloat(e.target.value);
+    if (!isNaN(newStep) && newStep > 0) {
+      setPositionStep(newStep);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
