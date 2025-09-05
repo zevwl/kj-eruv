@@ -46,6 +46,9 @@ const eruvConverter: FirestoreDataConverter<Eruv> = {
       inspector: data.inspector,
       certExpiration: data.certExpiration,
       boundary: data.boundary,
+      strokeColor: data.strokeColor,
+      fillColor: data.fillColor,
+      fillOpacity: data.fillOpacity,
     };
   },
 };
