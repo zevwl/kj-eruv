@@ -10,6 +10,9 @@ type NewEruvDataType = {
   createdAt: firestore.FieldValue;
   inspector?: string;
   certExpiration?: firestore.Timestamp;
+  strokeColor?: string;
+  fillColor?: string;
+  fillOpacity?: number;
 };
 
 // Helper to check if the user is a logged-in editor or admin
@@ -37,7 +40,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { name, inspector, certExpiration, boundary } = body;
+    const { name, inspector, certExpiration, boundary, strokeColor, fillColor, fillOpacity } = body;
 
     // Only name and boundary are now required.
     if (!name || !boundary || boundary.length < 3) {
@@ -56,6 +59,18 @@ export async function POST(request: NextRequest) {
 
     if (certExpiration) {
       newEruvData.certExpiration = firestore.Timestamp.fromDate(new Date(certExpiration));
+    }
+
+    if (strokeColor) {
+      newEruvData.strokeColor = strokeColor;
+    }
+
+    if (fillColor) {
+      newEruvData.fillColor = fillColor;
+    }
+
+    if (fillOpacity) {
+      newEruvData.fillOpacity = fillOpacity;
     }
 
     const docRef = await adminDb.collection('eruvs').add(newEruvData);

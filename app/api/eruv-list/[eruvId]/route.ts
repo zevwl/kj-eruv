@@ -9,6 +9,9 @@ type UpdatedEruvDataType = {
   inspector: string;
   boundary: firestore.GeoPoint[];
   certExpiration: firestore.Timestamp | null;
+  strokeColor?: string;
+  fillColor?: string;
+  fillOpacity?: number;
 };
 
 async function verifyEditor(request: NextRequest): Promise<boolean> {
@@ -37,7 +40,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ eru
   try {
     const { eruvId } = await context.params; // Await the promise to get the params
     const body = await request.json();
-    const { name, inspector, certExpiration, boundary } = body;
+    const { name, inspector, certExpiration, boundary, strokeColor, fillColor, fillOpacity } = body;
 
     if (!name || !boundary || boundary.length < 3) {
       return NextResponse.json({ error: 'Missing or invalid fields. Eruv Name and a valid boundary are required.' }, { status: 400 });
@@ -48,6 +51,9 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ eru
       inspector: inspector || '',
       boundary: boundary.map((p: { lat: number, lng: number }) => new firestore.GeoPoint(p.lat, p.lng)),
       certExpiration: certExpiration ? firestore.Timestamp.fromDate(new Date(certExpiration)) : null,
+      strokeColor: strokeColor || '#990000',
+      fillColor: fillColor || '#bce2ab',
+      fillOpacity: fillOpacity || 0.35,
     };
 
     await adminDb.collection('eruvs').doc(eruvId).update(updatedEruvData);
