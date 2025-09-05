@@ -234,39 +234,79 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
   return (
     <div className="bg-white p-6 rounded-lg shadow">
       {error && <div className="p-3 my-4 text-sm rounded-lg text-red-700 bg-red-100">{error}</div>}
-      <div className="relative">
-        <div ref={mapRef} style={{ height: '500px', width: '100%', marginBottom: '20px' }} />
-        <button
-          type="button"
-          onClick={() => setIsOverlayVisible(prev => !prev)}
-          className="absolute top-20 right-4 z-10 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 rounded-md shadow-md hover:bg-gray-50"
-        >
-          {isOverlayVisible ? 'Hide' : 'Show'} Background Map
-        </button>
+
+      <div className="bg-gray-50 p-3 rounded-md border mb-4">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <button
+              type="button"
+              onClick={() => setIsOverlayVisible(prev => !prev)}
+              className="px-3 py-1.5 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 border bg-white"
+            >
+              {isOverlayVisible ? 'Hide' : 'Show'} Overlay
+            </button>
+            {isOverlayVisible && (
+              <>
+                <div className="flex items-center gap-2">
+                  <label htmlFor="overlayOpacity" className="text-sm font-medium text-gray-700">Opacity:</label>
+                  <input
+                    type="range"
+                    id="overlayOpacity"
+                    min="0" max="1" step="0.01"
+                    value={overlayOpacity}
+                    onChange={(e) => setOverlayOpacity(parseFloat(e.target.value))}
+                    className="w-24"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <label htmlFor="positionStep" className="text-sm font-medium text-gray-700">Step:</label>
+                  <input type="number" id="positionStep" name="positionStep" value={positionStep} onChange={handleStepChange} step="0.00001" className="w-24 text-gray-900 border-gray-300 border rounded p-1 text-sm" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <label htmlFor="north" className="text-sm font-medium text-gray-700">N:</label>
+                  <input type="number" step={positionStep} id="north" name="north" value={imageBounds.north} onChange={handleBoundsChange} className="w-32 text-gray-900 border-gray-300 border rounded p-1 text-sm" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <label htmlFor="south" className="text-sm font-medium text-gray-700">S:</label>
+                  <input type="number" step={positionStep} id="south" name="south" value={imageBounds.south} onChange={handleBoundsChange} className="w-32 text-gray-900 border-gray-300 border rounded p-1 text-sm" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <label htmlFor="east" className="text-sm font-medium text-gray-700">E:</label>
+                  <input type="number" step={positionStep} id="east" name="east" value={imageBounds.east} onChange={handleBoundsChange} className="w-32 text-gray-900 border-gray-300 border rounded p-1 text-sm" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <label htmlFor="west" className="text-sm font-medium text-gray-700">W:</label>
+                  <input type="number" step={positionStep} id="west" name="west" value={imageBounds.west} onChange={handleBoundsChange} className="w-32 text-gray-900 border-gray-300 border rounded p-1 text-sm" />
+                </div>
+              </>
+           )}
+          </div>
       </div>
+      {/* --- END OF MOVED BLOCK --- */}
+
+      <div ref={mapRef} style={{ height: '500px', width: '100%', marginBottom: '20px' }} />
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700">Eruv Name</label>
-          <input type="text" name="name" id="name" required value={formState.name} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" />
+          <input type="text" name="name" id="name" required value={formState.name} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 text-gray-900 rounded-md shadow-sm" />
         </div>
         <div>
           <label htmlFor="inspector" className="block text-sm font-medium text-gray-700">Inspector</label>
-          <input type="text" name="inspector" id="inspector" value={formState.inspector} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" />
+          <input type="text" name="inspector" id="inspector" value={formState.inspector} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 text-gray-900 rounded-md shadow-sm" />
         </div>
         <div>
           <label htmlFor="certExpiration" className="block text-sm font-medium text-gray-700">Certification Expiration Date</label>
-          <input type="date" name="certExpiration" id="certExpiration" value={formState.certExpiration} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" />
+          <input type="date" name="certExpiration" id="certExpiration" value={formState.certExpiration} onChange={handleInputChange} className="mt-1 block w-full px-3 py-2 border border-gray-300 text-gray-900 rounded-md shadow-sm" />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
                 <label htmlFor="strokeColor" className="block text-sm font-medium text-gray-700">Border Color</label>
-                <input type="color" name="strokeColor" id="strokeColor" value={formState.strokeColor} onChange={handleInputChange} className="mt-1 h-10 w-full block border border-gray-300 rounded-md" />
+                <input type="color" name="strokeColor" id="strokeColor" value={formState.strokeColor} onChange={handleInputChange} className="mt-1 h-10 w-full block border border-gray-300 text-gray-900 rounded-md" />
             </div>
             <div>
                 <label htmlFor="fillColor" className="block text-sm font-medium text-gray-700">Fill Color</label>
-                <input type="color" name="fillColor" id="fillColor" value={formState.fillColor} onChange={handleInputChange} className="mt-1 h-10 w-full block border border-gray-300 rounded-md" />
+                <input type="color" name="fillColor" id="fillColor" value={formState.fillColor} onChange={handleInputChange} className="mt-1 h-10 w-full block border border-gray-300 text-gray-900 rounded-md" />
             </div>
             <div>
                 <label htmlFor="fillOpacity" className="block text-sm font-medium text-gray-700">Fill Opacity</label>
