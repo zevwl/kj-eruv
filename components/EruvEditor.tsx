@@ -24,6 +24,8 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const shapeRef = useRef<google.maps.Polygon | null>(null);
   const drawingManagerRef = useRef<google.maps.drawing.DrawingManager | null>(null);
+  const mapOverlayRef = useRef<google.maps.GroundOverlay | null>(null);
+  const mapInstanceRef = useRef<google.maps.Map | null>(null);
 
   const [formState, setFormState] = useState({
     name: eruvToEdit?.name || '',
@@ -35,6 +37,7 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isOverlayVisible, setIsOverlayVisible] = useState(true);
 
   useEffect(() => {
     const loader = new Loader({
@@ -52,6 +55,7 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
         center: eruvToEdit?.boundary[0] || { lat: 41.320, lng: -74.175 },
         zoom: eruvToEdit ? 15 : 14,
       });
+      mapInstanceRef.current = map;
 
       const imageUrl = '/eruv-map.jpg';
       const imageBounds = {
@@ -62,6 +66,7 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
       };
       const mapOverlay = new google.maps.GroundOverlay(imageUrl, imageBounds, { opacity: 0.7 });
       mapOverlay.setMap(map);
+      mapOverlayRef.current = mapOverlay;
 
       // If we are editing, draw the existing polygon.
       if (eruvToEdit) {
@@ -130,6 +135,12 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
     }
   }, [formState.strokeColor, formState.fillColor, formState.fillOpacity]);
 
+  useEffect(() => {
+    if (mapOverlayRef.current) {
+      mapOverlayRef.current.setMap(isOverlayVisible ? mapInstanceRef.current : null);
+    }
+  }, [isOverlayVisible]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const newValue = name === 'fillOpacity' ? parseFloat(value) : value;
@@ -184,7 +195,16 @@ export default function EruvEditor({ eruvToEdit }: EruvEditorProps) {
   return (
     <div className="bg-white p-6 rounded-lg shadow">
       {error && <div className="p-3 my-4 text-sm rounded-lg text-red-700 bg-red-100">{error}</div>}
-      <div ref={mapRef} style={{ height: '500px', width: '100%', marginBottom: '20px' }} />
+      <div className="relative">
+        <div ref={mapRef} style={{ height: '500px', width: '100%', marginBottom: '20px' }} />
+        <button
+          type="button"
+          onClick={() => setIsOverlayVisible(prev => !prev)}
+          className="absolute top-20 right-4 z-10 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 rounded-md shadow-md hover:bg-gray-50"
+        >
+          {isOverlayVisible ? 'Hide' : 'Show'} Background Map
+        </button>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
